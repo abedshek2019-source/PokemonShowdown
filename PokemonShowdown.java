@@ -6,143 +6,218 @@ public class PokemonShowdown {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("=========================================");
-        System.out.println("   Kanto Region 3v3 Pokémon Showdown!    ");
-        System.out.println("=========================================\n");
+        Pokemon[] team1 = { getRandomPokemon(), getRandomPokemon(), getRandomPokemon() };
+        Pokemon[] team2 = { getRandomPokemon(), getRandomPokemon(), getRandomPokemon() };
 
-        // STEP 4: Generate 3 random specialized Pokemon for each player
-        Pokemon[] team1 = { getRandomKantoPokemon(), getRandomKantoPokemon(), getRandomKantoPokemon() };
-        Pokemon[] team2 = { getRandomKantoPokemon(), getRandomKantoPokemon(), getRandomKantoPokemon() };
+        System.out.println("=== KANTO 3v3 POKEMON SHOWDOWN ===");
+        System.out.println("Player 1 and Player 2, get ready!\n");
 
-        System.out.println("Player 1's Team:");
-        for (Pokemon p : team1) System.out.println("- " + p.getName());
-        
-        System.out.println("\nPlayer 2's Team:");
-        for (Pokemon p : team2) System.out.println("- " + p.getName());
-
-        int p1Active = 0;
-        int p2Active = 0;
-
-        System.out.println("\n--- BATTLE START ---");
-        System.out.println("Player 1 sends out " + team1[p1Active].getName() + "!");
-        System.out.println("Player 2 sends out " + team2[p2Active].getName() + "!\n");
-
-        // BATTLE LOOP: Continues as long as both players have at least one conscious Pokémon
-        while (p1Active < 3 && p2Active < 3) {
-            Pokemon p1 = team1[p1Active];
-            Pokemon p2 = team2[p2Active];
-
-            // PLAYER 1 TURN
-            System.out.println("-----------------------------------------");
-            p1.displayStats();
-            p2.displayStats();
-            System.out.println("-----------------------------------------");
+        while (hasTeamConscious(team1) && hasTeamConscious(team2)) {
             
-            System.out.println("What will Player 1's " + p1.getName() + " do?");
+            Pokemon p1 = getActivePokemon(team1);
+            Pokemon p2 = getActivePokemon(team2);
+
+            if (p1 == null || !p1.isConscious()) {
+                team1 = switchActive(team1, scanner, "Player 1");
+                if (team1 == null) break;
+                p1 = getActivePokemon(team1);
+            }
+            if (p2 == null || !p2.isConscious()) {
+                team2 = switchActive(team2, scanner, "Player 2");
+                if (team2 == null) break;
+                p2 = getActivePokemon(team2);
+            }
+
+            p1 = getActivePokemon(team1);
+            p2 = getActivePokemon(team2);
+
+            System.out.println("\n--- PLAYER 1's TURN ---");
+            System.out.println("Your Active: " + p1.getName() + " (HP: " + p1.getHp() + "/" + p1.getMaxHp() + ")");
+            System.out.println("Opponent Active: " + p2.getName() + " (HP: " + p2.getHp() + "/" + p2.getMaxHp() + ")");
+            
             p1.showMoves();
-            System.out.print("Choose move (1-4) or 5 for Unique Ability: ");
+            System.out.println("5) Switch Pokémon");
+            System.out.print("Choose action (1-5): ");
             int choice1 = scanner.nextInt();
-            
-            System.out.println("\n*** PLAYER 1 ATTACKS ***");
+            scanner.nextLine();
+
             if (choice1 >= 1 && choice1 <= 4) {
-                p1.useMove(choice1 - 1, p2); // Inherited standard attack
-            } else {
-                p1.useUniqueAbility(); // Specialized behavior!
+                p1.useMove(choice1 - 1, p2);
+            } else if (choice1 == 5) {
+                team1 = manualSwitch(team1, scanner, "Player 1");
+                p1 = getActivePokemon(team1);
+                System.out.println("Switched active Pokémon!");
             }
 
-            // Check if Player 2's Pokémon fainted
-            if (!p2.isConscious()) {
-                p2Active++;
-                if (p2Active < 3) {
-                    System.out.println("\nPlayer 2 sends out " + team2[p2Active].getName() + "!\n");
-                }
-                continue; // Skip Player 2's turn if they just died
+            if (!hasTeamConscious(team2)) break;
+
+            System.out.println("\nGive the device to player 2. Press Enter when ready.");
+            scanner.nextLine();
+
+            p2 = getActivePokemon(team2);
+            p1 = getActivePokemon(team1);
+
+            System.out.println("\n--- PLAYER 2's TURN ---");
+            System.out.println("Your Active: " + p2.getName() + " (HP: " + p2.getHp() + "/" + p2.getMaxHp() + ")");
+            System.out.println("Opponent Active: " + p1.getName() + " (HP: " + p1.getHp() + "/" + p1.getMaxHp() + ")");
+            
+            p2.showMoves();
+            System.out.println("5) Switch Pokémon");
+            System.out.print("Choose action (1-5): ");
+            int choice2 = scanner.nextInt();
+            scanner.nextLine();
+
+            if (choice2 >= 1 && choice2 <= 4) {
+                p2.useMove(choice2 - 1, p1);
+            } else if (choice2 == 5) {
+                team2 = manualSwitch(team2, scanner, "Player 2");
+                p2 = getActivePokemon(team2);
+                System.out.println("Switched active Pokémon!");
             }
 
-            // PLAYER 2 TURN (Simplified to random selection for the opponent to speed up gameplay)
-            System.out.println("\n*** PLAYER 2 ATTACKS ***");
-            int choice2 = new Random().nextInt(5); // 0-3 for moves, 4 for ability
-            if (choice2 < 4) {
-                p2.useMove(choice2, p1);
-            } else {
-                p2.useUniqueAbility();
-            }
+            if (!hasTeamConscious(team1)) break;
 
-            // Check if Player 1's Pokémon fainted
-            if (!p1.isConscious()) {
-                p1Active++;
-                if (p1Active < 3) {
-                    System.out.println("\nPlayer 1 sends out " + team1[p1Active].getName() + "!\n");
-                }
-            }
+            System.out.println("\nGive the device to player 1. Press Enter when ready.");
+            scanner.nextLine();
         }
 
-        // WINNER CHECK
-        System.out.println("\n=========================================");
-        if (p1Active < 3) {
-            System.out.println("Player 2 is out of Pokémon! PLAYER 1 WINS!");
+        System.out.println("\n=== GAME OVER ===");
+        if (hasTeamConscious(team1)) {
+            System.out.println("PLAYER 1 WINS!");
         } else {
-            System.out.println("Player 1 is out of Pokémon! PLAYER 2 WINS!");
+            System.out.println("PLAYER 2 WINS!");
         }
-        System.out.println("=========================================");
         scanner.close();
     }
 
-    // HELPER: Generates a random specialized Kanto Pokémon
-    public static Pokemon getRandomKantoPokemon() {
-        Random rand = new Random();
-        int dex = rand.nextInt(6); // 0 to 5
-
-        // Creating 4 Moves for each Pokémon
-        Move tackle = new Move("Tackle", 10);
-        Move slam = new Move("Slam", 15);
-        Move elementalWeak = new Move("Elemental Burst", 18);
-        Move elementalStrong = new Move("Hyper Beam", 25);
-        Move[] standardMoves = { tackle, slam, elementalWeak, elementalStrong };
-
-        // Returns a specialized subclass based on the random number
-        switch (dex) {
-            case 0: return new FirePokemon("Charizard", 100, standardMoves);
-            case 1: return new FirePokemon("Arcanine", 110, standardMoves);
-            case 2: return new WaterPokemon("Blastoise", 120, standardMoves);
-            case 3: return new WaterPokemon("Gyarados", 115, standardMoves);
-            case 4: return new GrassPokemon("Venusaur", 125, standardMoves);
-            default: return new GrassPokemon("Exeggutor", 130, standardMoves);
+    public static boolean hasTeamConscious(Pokemon[] team) {
+        for (Pokemon p : team) {
+            if (p.isConscious()) return true;
         }
-        // To add all 151, you just expand this switch statement!
+        return false;
+    }
+
+    public static Pokemon getActivePokemon(Pokemon[] team) {
+        for (Pokemon p : team) {
+            if (p.isConscious()) return p;
+        }
+        return null;
+    }
+
+    public static Pokemon[] manualSwitch(Pokemon[] team, Scanner scanner, String playerName) {
+        System.out.println("\nChoose a Pokémon to switch to:");
+        for (int i = 0; i < team.length; i++) {
+            String status = team[i].isConscious() ? "HP: " + team[i].getHp() : "Fainted";
+            System.out.println((i + 1) + ") " + team[i].getName() + " [" + status + "]");
+        }
+        System.out.print("Enter team slot (1-3): ");
+        int slot = scanner.nextInt();
+        scanner.nextLine();
+        if (slot >= 1 && slot <= 3 && team[slot - 1].isConscious()) {
+            Pokemon temp = team[0];
+            team[0] = team[slot - 1];
+            team[slot - 1] = temp;
+        } else {
+            System.out.println("Invalid choice, staying with current Pokémon.");
+        }
+        return team;
+    }
+
+    public static Pokemon[] switchActive(Pokemon[] team, Scanner scanner, String playerName) {
+        System.out.println("\n" + playerName + "'s active Pokémon fainted! Choose next Pokémon:");
+        for (int i = 0; i < team.length; i++) {
+            if (team[i].isConscious()) {
+                System.out.println((i + 1) + ") " + team[i].getName());
+            }
+        }
+        System.out.print("Enter choice: ");
+        int slot = scanner.nextInt();
+        scanner.nextLine();
+        if (slot >= 1 && slot <= 3 && team[slot - 1].isConscious()) {
+            Pokemon temp = team[0];
+            team[0] = team[slot - 1];
+            team[slot - 1] = temp;
+        }
+        return team;
+    }
+
+    public static Pokemon getRandomPokemon() {
+        Random rand = new Random();
+        int dexNumber = rand.nextInt(12) + 1;
+        switch (dexNumber) {
+            case 1: return make("Grass", "Bulbasaur", 90, "Tackle", "Normal", 10, "Razor Leaf", "Grass", 20, "Leech Seed", "Grass", 15, "Solar Beam", "Grass", 40);
+            case 2: return make("Grass", "Venusaur", 160, "Tackle", "Normal", 10, "Petal Dance", "Grass", 30, "Body Slam", "Normal", 25, "Solar Beam", "Grass", 40);
+            case 3: return make("Grass", "Oddish", 95, "Absorb", "Grass", 15, "Acid", "Normal", 20, "Mega Drain", "Grass", 25, "Petal Dance", "Grass", 30);
+            case 4: return make("Fire", "Charmander", 85, "Scratch", "Normal", 10, "Ember", "Fire", 15, "Slash", "Normal", 20, "Flamethrower", "Fire", 35);
+            case 5: return make("Fire", "Charizard", 156, "Slash", "Normal", 20, "Wing Attack", "Normal", 25, "Flamethrower", "Fire", 35, "Fire Blast", "Fire", 45);
+            case 6: return make("Fire", "Vulpix", 80, "Tackle", "Normal", 10, "Ember", "Fire", 15, "Quick Attack", "Normal", 15, "Flamethrower", "Fire", 35);
+            case 7: return make("Water", "Squirtle", 88, "Tackle", "Normal", 10, "Bubble", "Water", 15, "Bite", "Normal", 20, "Water Gun", "Water", 25);
+            case 8: return make("Water", "Blastoise", 158, "Bite", "Normal", 20, "Water Gun", "Water", 25, "Surf", "Water", 35, "Hydro Pump", "Water", 45);
+            case 9: return make("Water", "Psyduck", 100, "Scratch", "Normal", 10, "Confusion", "Normal", 20, "Water Gun", "Water", 25, "Surf", "Water", 35);
+            case 10: return make("Normal", "Pidgey", 80, "Tackle", "Normal", 10, "Gust", "Normal", 15, "Quick Attack", "Normal", 15, "Wing Attack", "Normal", 20);
+            case 11: return make("Normal", "Rattata", 70, "Tackle", "Normal", 10, "Quick Attack", "Normal", 15, "Bite", "Normal", 20, "Hyper Fang", "Normal", 30);
+            default: return make("Normal", "Snorlax", 200, "Tackle", "Normal", 10, "Headbutt", "Normal", 25, "Body Slam", "Normal", 35, "Hyper Beam", "Normal", 50);
+        }
+    }
+
+    private static Pokemon make(String type, String name, int hp, 
+                                String m1, String t1, int p1, 
+                                String m2, String t2, int p2, 
+                                String m3, String t3, int p3, 
+                                String m4, String t4, int p4) {
+        Move[] moves = { new Move(m1, t1, p1), new Move(m2, t2, p2), new Move(m3, t3, p3), new Move(m4, t4, p4) };
+        if (type.equals("Fire")) return new FirePokemon(name, hp, moves);
+        if (type.equals("Water")) return new WaterPokemon(name, hp, moves);
+        if (type.equals("Grass")) return new GrassPokemon(name, hp, moves);
+        return new NormalPokemon(name, hp, moves); 
     }
 }
 
-// Data class to hold attack info
 class Move {
     String name;
+    String type;
     int power;
 
-    public Move(String name, int power) {
+    public Move(String name, String type, int power) {
         this.name = name;
+        this.type = type;
         this.power = power;
     }
 }
 
-// STEP 1: General Parent Class
-class Pokemon {
+abstract class Pokemon {
     protected String name;
+    protected String type;
     protected int hp;
     protected int maxHp;
-    protected Move[] moves; // Array of 4 attacks
+    protected Move[] moves;
 
-    public Pokemon(String name, int maxHp, Move[] moves) {
+    public Pokemon(String name, String type, int maxHp, Move[] moves) {
         this.name = name;
+        this.type = type;
         this.hp = maxHp;
         this.maxHp = maxHp;
         this.moves = moves;
     }
 
-    // Shared behavior inherited by ALL Pokémon
     public void useMove(int moveIndex, Pokemon target) {
         Move m = moves[moveIndex];
         System.out.println(name + " used " + m.name + "!");
-        target.takeDamage(m.power);
+
+        double multiplier = 1.0;
+        
+        if (m.type.equals("Fire") && target.type.equals("Grass")) multiplier = 2.0;
+        else if (m.type.equals("Fire") && target.type.equals("Water")) multiplier = 0.5;
+        else if (m.type.equals("Water") && target.type.equals("Fire")) multiplier = 2.0;
+        else if (m.type.equals("Water") && target.type.equals("Grass")) multiplier = 0.5;
+        else if (m.type.equals("Grass") && target.type.equals("Water")) multiplier = 2.0;
+        else if (m.type.equals("Grass") && target.type.equals("Fire")) multiplier = 0.5;
+
+        if (multiplier == 2.0) System.out.println("It's super effective!");
+        else if (multiplier == 0.5) System.out.println("It's not very effective...");
+
+        int finalDamage = (int) (m.power * multiplier);
+        target.takeDamage(finalDamage);
     }
 
     public void takeDamage(int damage) {
@@ -154,79 +229,37 @@ class Pokemon {
 
     public void showMoves() {
         for (int i = 0; i < moves.length; i++) {
-            System.out.println((i + 1) + ") " + moves[i].name + " (Power: " + moves[i].power + ")");
+            System.out.println((i + 1) + ") " + moves[i].name + " [" + moves[i].type + "] (Power: " + moves[i].power + ")");
         }
-    }
-
-    // To be overridden by subclasses
-    public void useUniqueAbility() {
-        System.out.println(name + " glared menacingly!");
     }
 
     public boolean isConscious() { return this.hp > 0; }
     public String getName() { return name; }
-    public void displayStats() { System.out.println(name + " HP: " + hp + "/" + maxHp); }
+    public String getType() { return type; }
+    public int getHp() { return hp; }
+    public int getMaxHp() { return maxHp; }
 }
 
-// STEP 2 & 3: Specialized Subclass 1
 class FirePokemon extends Pokemon {
     public FirePokemon(String name, int maxHp, Move[] moves) {
-        super(name, maxHp, moves);
-    }
-
-    // Specialized behavior unique to Fire type
-    @Override
-    public void useUniqueAbility() {
-        System.out.println(name + " activates BLAZE! (Its body erupts in flames, healing 10 HP)");
-        this.hp += 10;
-        if (this.hp > this.maxHp) this.hp = maxHp;
+        super(name, "Fire", maxHp, moves);
     }
 }
 
-// STEP 2 & 3: Specialized Subclass 2
 class WaterPokemon extends Pokemon {
     public WaterPokemon(String name, int maxHp, Move[] moves) {
-        super(name, maxHp, moves);
-    }
-
-    // Specialized behavior unique to Water type
-    @Override
-    public void useUniqueAbility() {
-        System.out.println(name + " activates TORRENT! (A massive wave crashes down!)");
-        System.out.println("It does 15 recoil damage to itself, but looks incredibly cool!");
-        this.hp -= 15; // Unique quirk
+        super(name, "Water", maxHp, moves);
     }
 }
 
-// STEP 2 & 3: Specialized Subclass 3
 class GrassPokemon extends Pokemon {
     public GrassPokemon(String name, int maxHp, Move[] moves) {
-        super(name, maxHp, moves);
-    }
-
-    // Specialized behavior unique to Grass type
-    @Override
-    public void useUniqueAbility() {
-        System.out.println(name + " uses SYNTHESIS! (Absorbs sunlight to heal 20 HP)");
-        this.hp += 20;
-        if (this.hp > this.maxHp) this.hp = maxHp;
+        super(name, "Grass", maxHp, moves);
     }
 }
 
-/*
- === STEP 5: DESIGN EXPLANATION ===
- 1. What was defined once in Pokemon:
-    - Shared attributes: 'name', 'hp', 'maxHp', and the 'Move[] moves' array (handling 4 attacks).
-    - Shared behaviors: 'useMove()', 'takeDamage()', 'showMoves()', and 'isConscious()'.
-
- 2. Inheritance Relationship Line:
-    - 'class FirePokemon extends Pokemon', 'class WaterPokemon extends Pokemon', etc.
-    - Meaning: The 'extends' keyword establishes that Fire, Water, and Grass Pokémon 
-      are specialized types of Pokemon ("IS-A" relationship). They inherit the 4-move array 
-      and HP tracking automatically.
-
- 3. Why this design is better:
-    - We didn't have to write the 4-move attack logic or HP tracking 3 different times. 
-    - The subclasses only needed to define their ONE unique trait ('useUniqueAbility()'), 
-      making adding the remaining 145 Kanto Pokémon incredibly easy!
-*/
+class NormalPokemon extends Pokemon {
+    public NormalPokemon(String name, int maxHp, Move[] moves) {
+        super(name, "Normal", maxHp, moves);
+    }
+}
