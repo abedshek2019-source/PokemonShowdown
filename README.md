@@ -13,3 +13,4 @@ A Java console game built to demonstrate object-oriented programming principles,
 2. Compile all Java source files:
    ```bash
    javac *.java
+   java PokemonShowdown
