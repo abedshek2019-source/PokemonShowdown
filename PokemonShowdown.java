@@ -13,7 +13,6 @@ public class PokemonShowdown {
         System.out.println("Player 1 and Player 2, get ready!\n");
 
         while (hasTeamConscious(team1) && hasTeamConscious(team2)) {
-            
             Pokemon p1 = getActivePokemon(team1);
             Pokemon p2 = getActivePokemon(team2);
 
@@ -42,6 +41,7 @@ public class PokemonShowdown {
             scanner.nextLine();
 
             if (choice1 >= 1 && choice1 <= 4) {
+                p1.performSpecialAction(p2);
                 p1.useMove(choice1 - 1, p2);
             } else if (choice1 == 5) {
                 team1 = manualSwitch(team1, scanner, "Player 1");
@@ -68,6 +68,7 @@ public class PokemonShowdown {
             scanner.nextLine();
 
             if (choice2 >= 1 && choice2 <= 4) {
+                p2.performSpecialAction(p1);
                 p2.useMove(choice2 - 1, p1);
             } else if (choice2 == 5) {
                 team2 = manualSwitch(team2, scanner, "Player 2");
@@ -170,96 +171,5 @@ public class PokemonShowdown {
         if (type.equals("Water")) return new WaterPokemon(name, hp, moves);
         if (type.equals("Grass")) return new GrassPokemon(name, hp, moves);
         return new NormalPokemon(name, hp, moves); 
-    }
-}
-
-class Move {
-    String name;
-    String type;
-    int power;
-
-    public Move(String name, String type, int power) {
-        this.name = name;
-        this.type = type;
-        this.power = power;
-    }
-}
-
-abstract class Pokemon {
-    protected String name;
-    protected String type;
-    protected int hp;
-    protected int maxHp;
-    protected Move[] moves;
-
-    public Pokemon(String name, String type, int maxHp, Move[] moves) {
-        this.name = name;
-        this.type = type;
-        this.hp = maxHp;
-        this.maxHp = maxHp;
-        this.moves = moves;
-    }
-
-    public void useMove(int moveIndex, Pokemon target) {
-        Move m = moves[moveIndex];
-        System.out.println(name + " used " + m.name + "!");
-
-        double multiplier = 1.0;
-        
-        if (m.type.equals("Fire") && target.type.equals("Grass")) multiplier = 2.0;
-        else if (m.type.equals("Fire") && target.type.equals("Water")) multiplier = 0.5;
-        else if (m.type.equals("Water") && target.type.equals("Fire")) multiplier = 2.0;
-        else if (m.type.equals("Water") && target.type.equals("Grass")) multiplier = 0.5;
-        else if (m.type.equals("Grass") && target.type.equals("Water")) multiplier = 2.0;
-        else if (m.type.equals("Grass") && target.type.equals("Fire")) multiplier = 0.5;
-
-        if (multiplier == 2.0) System.out.println("It's super effective!");
-        else if (multiplier == 0.5) System.out.println("It's not very effective...");
-
-        int finalDamage = (int) (m.power * multiplier);
-        target.takeDamage(finalDamage);
-    }
-
-    public void takeDamage(int damage) {
-        this.hp -= damage;
-        if (this.hp < 0) this.hp = 0;
-        System.out.println(name + " took " + damage + " damage!");
-        if (hp == 0) System.out.println(name + " fainted!");
-    }
-
-    public void showMoves() {
-        for (int i = 0; i < moves.length; i++) {
-            System.out.println((i + 1) + ") " + moves[i].name + " [" + moves[i].type + "] (Power: " + moves[i].power + ")");
-        }
-    }
-
-    public boolean isConscious() { return this.hp > 0; }
-    public String getName() { return name; }
-    public String getType() { return type; }
-    public int getHp() { return hp; }
-    public int getMaxHp() { return maxHp; }
-}
-
-class FirePokemon extends Pokemon {
-    public FirePokemon(String name, int maxHp, Move[] moves) {
-        super(name, "Fire", maxHp, moves);
-    }
-}
-
-class WaterPokemon extends Pokemon {
-    public WaterPokemon(String name, int maxHp, Move[] moves) {
-        super(name, "Water", maxHp, moves);
-    }
-}
-
-class GrassPokemon extends Pokemon {
-    public GrassPokemon(String name, int maxHp, Move[] moves) {
-        super(name, "Grass", maxHp, moves);
-    }
-}
-
-class NormalPokemon extends Pokemon {
-    public NormalPokemon(String name, int maxHp, Move[] moves) {
-        super(name, "Normal", maxHp, moves);
     }
 }
